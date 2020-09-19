@@ -43,12 +43,13 @@ integrated_payoff(cutoff, density::Function=f, ub::Real=ub) =
 """
 Sender expected payoff as a function of the cutoff and the type distribution
 """
-expected_payoff(cutoff, dist::Distribution=unidist) = integrated_payoff(cutoff, dist)[1]
+expected_payoff(cutoff::Real, dist::Distribution=unidist) = integrated_payoff(cutoff, dist)[1]
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
+
 """
 Alias for expected_payoff
 """
-V(cutoff, dist::Distribution=unidist) = expected_payoff(cutoff, dist)
+V(cutoff::Real, dist::Distribution=unidist) = expected_payoff(cutoff, dist)
 V(cutoff, f::Function=f, ub::Real=ub) = expected_payoff(cutoff, f, ub)
 
 # Lagrange Multipliers
@@ -63,29 +64,29 @@ integral_term(p, f::Function, ub::Real) = series_integral(p, f, ub)[1] / (1 - p)
 """
 Lagrange multiplier for the IC (reporting) constraint
 """
-λ(p, dist::Distribution=unidist) = pdf(dist, p) - integral_term(p, dist)
+λ(p::Real, dist::Distribution=unidist) = pdf(dist, p) - integral_term(p, dist)
 λ(p, f::Function=f, ub::Real=ub) = f(p) - integral_term(p, f, ub)
-up_integral_λ(p, dist::Distribution=unidist) = quadgk(t -> λ(t, dist), p, maximum(dist))
+up_integral_λ(p::Real, dist::Distribution=unidist) = quadgk(t -> λ(t, dist), p, maximum(dist))
 up_integral_λ(p, f::Function=f, ub::Real=ub) = quadgk(t -> λ(t, f, ub), p, ub)
 
 """
 ``\\Lambda (p, dist) = \\int_p^{1/2} \\lambda(t, dist) \\, \\mathrm{d}t``
 """
-Λ(p, dist::Distribution=unidist) = up_integral_λ(p, dist)[1]
+Λ(p::Real, dist::Distribution=unidist) = up_integral_λ(p, dist)[1]
 Λ(p, f::Function=f, ub::Real=ub) = up_integral_λ(p, f, ub)[1]
 
 # Multiplier for bound constraint on π_G
 """
 ``\\mu`` is the Lagrange multiplier for the constraint that ``\\pi_G`` must be a probability.
 """
-μ(p, dist::Distribution=unidist) = 2p * pdf(dist, p) - integral_term(p, dist)
+μ(p::Real, dist::Distribution=unidist) = 2p * pdf(dist, p) - integral_term(p, dist)
 μ(p, f::Function=f, ub::Real=ub) = 2p * f(p) - integral_term(p, f, ub)
 
 # ∂μ/∂p
 """
 ``\\partial \\mu / \\partial p``
 """
-dμdp(p, dist::Distribution=unidist) = (2 + 1 / (1 - p)) * pdf(dist, p) +
+dμdp(p::Real, dist::Distribution=unidist) = (2 + 1 / (1 - p)) * pdf(dist, p) +
                 2p * derivative(t -> pdf(dist, t), p) +
                 2integral_term(p, dist) / (1 - p)
 
