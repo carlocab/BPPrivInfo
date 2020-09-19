@@ -33,7 +33,7 @@ end
 # Sender Expected Payoffs
 payoff_integrand(type, cutoff, dist::Distribution) = payoff(type, cutoff) * pdf(dist, type)
 payoff_integrand(t, c, f::Function=f) = payoff(t, c) * f(t)
-integrated_payoff(cutoff, dist::Distribution=unidist) = quadgk(
+integrated_payoff(cutoff::Real, dist::Distribution=unidist) = quadgk(
                                               t -> payoff_integrand(t, cutoff, dist),
                                               cutoff,
                                               maximum(dist)
