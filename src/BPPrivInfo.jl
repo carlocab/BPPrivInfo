@@ -1,6 +1,5 @@
 module BPPrivInfo
 
-using LaTeXStrings
 using Optim
 using QuadGK
 using Distributions
@@ -32,48 +31,67 @@ function payoff(type, cutoff)
 end
 
 # Sender Expected Payoffs
-payoff_integrand(type, cutoff, density) = payoff(type, cutoff) * density(type)
-integrated_payoff(cutoff, density=f) = quadgk(
-                                              t -> payoff_integrand(t, cutoff, density),
+payoff_integrand(type, cutoff, dist::Distribution) = payoff(type, cutoff) * pdf(dist, type)
+payoff_integrand(t, c, f::Function=f) = payoff(t, c) * f(t)
+integrated_payoff(cutoff, dist::Distribution=unidist) = quadgk(
+                                              t -> payoff_integrand(t, cutoff, dist),
                                               cutoff,
-                                              maximum(density)
+                                              maximum(dist)
                                              )
+integrated_payoff(cutoff, density::Function=f, ub::Real=ub) =
+        quadgk(t -> payoff_integrand(t, cutoff, density), cutoff, ub)
 """
-Sender expected payoff as a function of the cutoff and the type density f
+Sender expected payoff as a function of the cutoff and the type distribution
 """
-expected_payoff(cutoff, density=f) = inteated_payoff(cutoff, density)[1]
+expected_payoff(cutoff, dist::Distribution=unidist) = integrated_payoff(cutoff, dist)[1]
+expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 """
 Alias for expected_payoff
 """
-V(cutoff, f=f) = expected_payoff(cutoff, f)
+V(cutoff, dist::Distribution=unidist) = expected_payoff(cutoff, dist)
+V(cutoff, f::Function=f, ub::Real=ub) = expected_payoff(cutoff, f, ub)
 
 # Lagrange Multipliers
-series_integrand(t, f) = (1 - t) * f(t)
-series_integral(p, f) = quadgk(t -> series_integrand(t, f), p, maximum(f))
-integral_term(p, f) = series_integral(p, f)[1]
+series_integrand(t, dist::Distribution) = (1 - t) * pdf(dist, t)
+series_integrand(t, f::Function) = (1 - t) * f(t)
+series_integral(p, dist) = quadgk(t -> series_integrand(t, dist), p, maximum(dist))
+series_integral(p, f::Function, ub::Real) = quadgk(t -> series_integrand(t, f), p, ub)
+integral_term(p, dist::Distribution) = series_integral(p, dist)[1]
+integral_term(p, f::Function, ub::Real) = series_integral(p, f, ub)[1]
 
 # Multiplier for IC constraint
 """
 Lagrange multiplier for the IC (reporting) constraint
 """
-λ(p, f=f) = f(p) - integral_term(p, f)
-up_integral_λ(p, f=f) = quadgk(t -> λ(t, f), p, maximum(f))
+λ(p, dist::Distribution=unidist) = pdf(dist, p) - integral_term(p, dist)
+λ(p, f::Function=f, ub::Real=ub) = f(p) - integral_term(p, f, ub)
+up_integral_λ(p, dist::Distribution=unidist) = quadgk(t -> λ(t, dist), p, maximum(dist))
+up_integral_λ(p, f::Function=f, ub::Real=ub) = quadgk(t -> λ(t, f, ub), p, ub)
+
 """
-``\\Lambda (p, f) = \\int_p^{1/2} \\lambda(t, f) \\, \\mathrm{d}t``
+``\\Lambda (p, dist) = \\int_p^{1/2} \\lambda(t, dist) \\, \\mathrm{d}t``
 """
-Λ(p, f=f) = up_integral_λ(p, f)[1]
+Λ(p, dist::Distribution=unidist) = up_integral_λ(p, dist)[1]
+Λ(p, f::Function=f, ub::Real=ub) = up_integral_λ(p, f, ub)[1]
 
 # Multiplier for bound constraint on π_G
 """
 ``\\mu`` is the Lagrange multiplier for the constraint that ``\\pi_G`` must be a probability.
 """
-μ(p, f=f, ub=ub) = 2p * f(p) - integral_term(p, f, ub)
+μ(p, dist::Distribution=unidist) = 2p * pdf(dist, p) - integral_term(p, dist)
+μ(p, f::Function=f, ub::Real=ub) = 2p * f(p) - integral_term(p, f, ub)
+
 # ∂μ/∂p
 """
 ``\\partial \\mu / \\partial p``
 """
-dμdp(p, f=f, ub=ub) = (2 + 1 / (1 - p)) * f(p) +
-                    2p * derivative(f, p) +
-                    2integral_term(p, f, ub) / (1 - p)
+dμdp(p, dist::Distribution=unidist) = (2 + 1 / (1 - p)) * pdf(dist, p) +
+                2p * derivative(t -> pdf(dist, t), p) +
+                2integral_term(p, dist) / (1 - p)
+
+dμdp(p, f::Function=f, ub::Real=ub) =
+                (2 + 1 / (1 - p)) * f(p) +
+                2p * derivative(f, p) +
+                2integral_term(p, f, ub) / (1 - p)
 
 end # module
