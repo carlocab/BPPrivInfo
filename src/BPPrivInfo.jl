@@ -17,7 +17,7 @@ likelihoodratio(p) = p / (1 - p)
 # Assume sender chooses a cutoff type in [0,1/2]
 const lb = 0.0
 const ub = 0.5
-# Uniform Density
+# Assume Uniform Distribution for Default
 const unidist = Uniform(lb, ub)
 f(t) = pdf(unidist, t)
 
@@ -54,10 +54,10 @@ V(cutoff, f::Function=f, ub::Real=ub) = expected_payoff(cutoff, f, ub)
 # Lagrange Multipliers
 series_integrand(t, dist::Distribution) = (1 - t) * pdf(dist, t)
 series_integrand(t, f::Function) = (1 - t) * f(t)
-series_integral(p, dist) = quadgk(t -> series_integrand(t, dist), p, maximum(dist))
+series_integral(p, dist::Distribution) = quadgk(t -> series_integrand(t, dist), p, maximum(dist))
 series_integral(p, f::Function, ub::Real) = quadgk(t -> series_integrand(t, f), p, ub)
-integral_term(p, dist::Distribution) = series_integral(p, dist)[1]
-integral_term(p, f::Function, ub::Real) = series_integral(p, f, ub)[1]
+integral_term(p, dist::Distribution) = series_integral(p, dist)[1] / (1 - p)^2
+integral_term(p, f::Function, ub::Real) = series_integral(p, f, ub)[1] / (1 - p)^2
 
 # Multiplier for IC constraint
 """
