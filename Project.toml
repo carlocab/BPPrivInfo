@@ -1,0 +1,4 @@
+name = "BPPrivInfo"
+uuid = "3979e9f2-b05e-4cf2-ac70-acbf229330b1"
+authors = ["Carlo Cabrera <30379873+carlocab@users.noreply.github.com>"]
+version = "0.1.0"
