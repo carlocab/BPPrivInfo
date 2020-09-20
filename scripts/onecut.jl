@@ -6,14 +6,12 @@ using Plots
 using LaTeXStrings
 using QuadGK
 
-export plotfuncs
-
 const lb = 0.0
 const ub = 0.5
 const tridist = TriangularDist(lb, ub) 
-const sin_f = t -> sin(4π * t) + 1
+const sin_f(t) = 2sin(4π * t) + 2
 
-function plotfuncs(n=501, dist::Distribution=tridist)
+function plotfuncs(dist::Distribution=tridist, n::Integer=501)
     x = range(minimum(dist), maximum(dist), length = n)
     y₁ = map(t -> V(t, dist), x)
     y₂ = map(t -> -μ(t, dist), x)
@@ -26,7 +24,7 @@ function plotfuncs(n=501, dist::Distribution=tridist)
     return plt
 end
 
-function plotfuncs(n, f::Function, lb::Real=lb, ub::Real=ub)
+function plotfuncs(f::Function, n::Integer, lb::Real=lb, ub::Real=ub)
     x = range(lb, ub, length = n)
     y₁ = map(t -> V(t, f, ub), x)
     y₂ = map(t -> -μ(t, f, ub), x)
