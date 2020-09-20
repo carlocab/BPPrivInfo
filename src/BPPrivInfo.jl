@@ -42,11 +42,9 @@ end
 # Sender Expected Payoffs
 payoff_integrand(type, cutoff, dist::CUD) = payoff(type, cutoff) * pdf(dist, type)
 payoff_integrand(t, c, f::Function=f) = payoff(t, c) * f(t)
-integrated_payoff(cutoff::Real, dist::CUD=unidist) = quadgk(
-                                              t -> payoff_integrand(t, cutoff, dist),
-                                              cutoff,
-                                              maximum(dist)
-                                             )
+
+integrated_payoff(cutoff::Real, dist::CUD=unidist) =
+        quadgk(t -> payoff_integrand(t, cutoff, dist), cutoff, maximum(dist))
 integrated_payoff(cutoff, density::Function=f, ub::Real=ub) =
         quadgk(t -> payoff_integrand(t, cutoff, density), cutoff, ub)
 """
@@ -95,7 +93,8 @@ upper_integral_λ(p, f::Function=f, ub::Real=ub) = quadgk(t -> λ(t, f, ub), p, 
 """
 ``\\partial \\mu / \\partial p``
 """
-dμdp(p::Real, dist::CUD=unidist) = (2 + 1 / (1 - p)) * pdf(dist, p) +
+dμdp(p::Real, dist::CUD=unidist) = 
+                (2 + 1 / (1 - p)) * pdf(dist, p) +
                 2p * derivative(t -> pdf(dist, t), p) +
                 2integral_term(p, dist) / (1 - p)
 
