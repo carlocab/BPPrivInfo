@@ -10,6 +10,8 @@ export μ
 export dμdp
 export optimise
 
+include("UnivariateDensity.jl")
+
 using Optim
 using QuadGK
 using Distributions
