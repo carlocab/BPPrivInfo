@@ -1,14 +1,14 @@
-# How do I check that the range of `f` is nonnegative?
 # More accurately, this should be called `BoundedUnivariateDensity`
-struct UnivariateDensity{T<:Real}
-    f::Function
+struct UnivariateDensity{F<:Function, T<:Real}
+    f::F
     lb::T
     ub::T
-    function UnivariateDensity{T}(f::Function, lb::T, ub::T) where {T <: Real}
+    function UnivariateDensity{F,T}(f::F, lb::T, ub::T) where {F<:Function, T<:Real}
         area = quadgk(f, lb, ub)[1]
-        if area ≈ 1 && lb < ub
+        minf = Optim.minimum(Optim.optimize(f, lb, ub, Brent()))
+        if area ≈ 1.0 && lb < ub && (minf ≥ 0 || minf ≈ 0.0)
             g(t) = lb ≤ t ≤ ub ? f(t) : zero(t)
-            return new{T}(g, lb, ub)
+            return new{typeof(g), T}(g, lb, ub)
         else
             @error "Not a valid density!"
             # Maybe better to throw an argument exception?
@@ -16,8 +16,9 @@ struct UnivariateDensity{T<:Real}
     end
 end
 
-UnivariateDensity(f::Function, lb::T, ub::T) where {T <: Real} = UnivariateDensity{T}(f, lb, ub)
+UnivariateDensity(f::F, lb::T, ub::T) where {F<:Function, T <: Real} = UnivariateDensity{F, T}(f, lb, ub)
 UnivariateDensity(f::Function, lb::Real, ub::Real) = UnivariateDensity(f, promote(lb, ub)...)
+UnivariateDensity(f::Real, lb, ub) = UnivariateDensity(_ -> 1 / (ub - lb), lb, ub)
 
 function integrate(g::Function, d::UnivariateDensity, bounds::Vararg{T}) where {T <: Real}
     integrand(t) = g(t) * d.f(t)
