@@ -1,4 +1,5 @@
 # How do I check that the range of `f` is nonnegative?
+# More accurately, this should be called `BoundedUnivariateDensity`
 struct UnivariateDensity{T<:Real}
     f::Function
     lb::T
