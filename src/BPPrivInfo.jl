@@ -11,9 +11,6 @@ export dμdp
 export optimise
 export UnivariateDensity
 
-include("UnivariateDensity.jl")
-include("discrete.jl")
-
 using Optim
 using QuadGK
 using Distributions
@@ -22,6 +19,10 @@ using Quadrature
 using Expectations
 using ForwardDiff
 using Zygote
+
+# Calls to include need to come after `using`
+include("UnivariateDensity.jl")
+include("discrete.jl")
 
 const derivative = ForwardDiff.derivative
 const CUD = ContinuousUnivariateDistribution
