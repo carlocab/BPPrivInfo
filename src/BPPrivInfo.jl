@@ -65,7 +65,7 @@ expected_payoff(cutoff::Real, dist::CUD=unidist, n::Integer=500) =
                                         E(dist, n)(t -> payoff(t, cutoff))
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
-function expected_payoff(cut, dist::DiscreteNonParametric)
+function expected_payoff(cut, dist::DiscreteNonParametric; kwargs...)
     belief = support(dist)
     prob = probs(dist)
     cutindex = findfirst(≥(cut), belief)
@@ -137,11 +137,7 @@ dμdp(p, f::Function=f, ub::Real=ub) =
 dμdp(p, d::Density) = dμdp(p, d.f, d.ub)
 
 function optimise(dist::T=unidist; n::Integer=5000, alg=Brent()) where {T <: Union{CUD, DiscreteNonParametric}}
-    if T == CUD
-        objective(x) = -expected_payoff(x, dist, n)
-    else
-        objective(x) = -expected_payoff(x, dist)
-    end
+    objective(x) = -expected_payoff(x, dist; n = n)
     lb = minimum(dist)
     ub = maximum(dist)
     return optimize(objective, lb, ub, alg)
