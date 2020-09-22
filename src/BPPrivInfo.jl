@@ -63,6 +63,14 @@ expected_payoff(cutoff::Real, dist::CUD=unidist, n::Integer=500) =
                                         E(dist, n)(t -> payoff(t, cutoff))
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
+function expected_payoff(cut, dist::DiscreteNonParametric)
+    belief = support(dist)
+    prob = probs(dist)
+    cutindex = findfirst(≥(cut), belief)
+    prob = prob[cutindex:end]
+    belief = belief[cutindex:end]
+    return dot(prob, belief) + (cut / (1 - cut)) * dot(prob, (1 .- belief))
+end
 
 """
 Alias for expected_payoff
@@ -70,6 +78,7 @@ Alias for expected_payoff
 V(cutoff::Real, dist::CUD=unidist, n::Integer=500) = expected_payoff(cutoff, dist, n)
 V(cutoff, f::Function, ub::Real) = expected_payoff(cutoff, f, ub)
 V(cutoff, density::Density=unidens) = V(cutoff, density.f, density.ub)
+V(cutoff, dist::DiscreteNonParametric) = expected_payoff(cutoff, dist)
 
 # Lagrange Multipliers
 series_integrand(p::T, t::T) where {T <: Real} = t ≥ p ? 1 - t : zero(t)
@@ -125,8 +134,12 @@ dμdp(p, f::Function=f, ub::Real=ub) =
 
 dμdp(p, d::Density) = dμdp(p, d.f, d.ub)
 
-function optimise(dist::CUD=unidist; n::Integer=5000, alg=Brent())
-    objective(x) = -V(x, dist, n)
+function optimise(dist::T=unidist; n::Integer=5000, alg=Brent()) where {T <: Union{CUD, DiscreteNonParametric}}
+    if T == CUD
+        objective(x) = -expected_payoff(x, dist, n)
+    else
+        objective(x) = -expected_payoff(x, dist)
+    end
     lb = minimum(dist)
     ub = maximum(dist)
     return optimize(objective, lb, ub, alg)
