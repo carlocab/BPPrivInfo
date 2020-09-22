@@ -1,6 +1,5 @@
 using JuMP, Gurobi, Plots, LaTeXStrings, Distributions, LinearAlgebra
-
-include("../src/discrete.jl")
+using BPPrivInfo
 
 typedist = discretise(Uniform(0.0, 0.5), 1000)
 
@@ -39,15 +38,6 @@ function solve_discretised(dist::DiscreteNonParametric)
     plot!(belief, value.(πB), label = L"\pi_B")
 
     return BPPI, πG, πB
-end
-
-function expected_payoff(cut, dist::DiscreteNonParametric)
-    belief = support(dist)
-    prob = probs(dist)
-    cutindex = findfirst(≥(cut), belief)
-    prob = prob[cutindex:end]
-    belief = belief[cutindex:end]
-    return dot(prob, belief) + (cut / (1 - cut)) * dot(prob, (1 .- belief))
 end
 
 function plot_exp_payoff(dist::DiscreteNonParametric)

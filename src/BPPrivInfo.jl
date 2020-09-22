@@ -12,6 +12,7 @@ export optimise
 export UnivariateDensity
 
 include("UnivariateDensity.jl")
+include("discrete.jl")
 
 using Optim
 using QuadGK
