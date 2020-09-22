@@ -10,7 +10,9 @@ export μ
 export dμdp
 export optimise
 export UnivariateDensity
+export discretise
 
+using LinearAlgebra
 using Optim
 using QuadGK
 using Distributions
