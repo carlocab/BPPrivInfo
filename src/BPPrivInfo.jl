@@ -43,12 +43,13 @@ const unidens = Density(f, lb, ub)
 
 # Sender Ex-Post Payoff
 function payoff(type::T, cutoff::T) where {T <: Real}
+    pay = type + (1 - type) * likelihoodratio(cutoff)
     if cutoff ≤ 1/2 && cutoff ≤ type
-        return type + (1 - type) * likelihoodratio(cutoff)
+        return pay
     elseif cutoff ≤ type
-        return one(type)
+        return one(pay)
     else
-        return zero(type)
+        return zero(pay)
     end
 end
 payoff(type::Real, cutoff::Real) = payoff(promote(type, cutoff)...)
@@ -71,8 +72,9 @@ function expected_payoff(cut, dist::DiscreteNonParametric; kwargs...)
     belief = support(dist)
     prob = probs(dist)
     cutindex = findfirst(≥(cut), belief)
-    prob = prob[cutindex:end]
-    belief = belief[cutindex:end]
+    # Use @view since I don't need to make a copy of `prob` and `belief`
+    prob = @view prob[cutindex:end]
+    belief = @view belief[cutindex:end]
     return dot(prob, belief) + (cut / (1 - cut)) * dot(prob, (1 .- belief))
 end
 
