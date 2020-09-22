@@ -1,7 +1,6 @@
 using JuMP, Gurobi, Plots, LaTeXStrings, Distributions, LinearAlgebra
 
 include("../src/discrete.jl")
-include("../../BPUnkPr/StrangeSinDist.jl")
 
 typedist = discretise(Uniform(0.0, 0.5), 1000)
 
