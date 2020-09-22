@@ -1,7 +1,15 @@
 using JuMP, Gurobi, Plots, LaTeXStrings, Distributions, LinearAlgebra
 using BPPrivInfo
 
-typedist = discretise(Uniform(0.0, 0.5), 1000)
+
+lb = 0.0 + eps(0.0)
+ub = 1.0 - eps(1.0)
+dist = MixtureModel([Uniform(lb, 1/2 + 1/100),
+                     truncated(Normal(ub, 0.1), 1/2 - 1/100, ub)], [35/100, 65/100])
+
+typedist = discretise(dist, 1000)
+prob = probs(typedist)
+belief = support(typedist)
 
 function solve_discretised(dist::DiscreteNonParametric)
     # Create problem data
@@ -36,8 +44,9 @@ function solve_discretised(dist::DiscreteNonParametric)
     # Generate plots
     plot(belief, value.(πG), label = L"\pi_G", legend = :outertopright, show = true)
     plot!(belief, value.(πB), label = L"\pi_B")
+    # plot(belief, -dual.(UpperBoundRef.(πG)), label = L"\pi_G \le 1", legend = :outertopright, show = true)
 
-    return BPPI, πG, πB
+    return BPPI, πG, πB, report
 end
 
 function plot_exp_payoff(dist::DiscreteNonParametric)
@@ -45,3 +54,16 @@ function plot_exp_payoff(dist::DiscreteNonParametric)
     plot!(x, t -> expected_payoff(t, dist), label = L"V", legend = :outertopright)
 end
 
+model, πG, πB, report = solve_discretised(typedist)
+
+get_report_duals(report, i, n) = dual.(report[i,j] for j in 1:n if j ≠ i)
+
+function plot_report_duals(dist, report)
+    belief = support(dist)
+    n = length(belief)
+    plt = plot(belief[2:end], get_report_duals(report, 1, n), label = "1", legend = false)
+    for j in 2:n
+        plot!(plt, belief[1:end .≠ j], get_report_duals(report, j, n), label = "$j")
+    end
+    display(plt)
+end
