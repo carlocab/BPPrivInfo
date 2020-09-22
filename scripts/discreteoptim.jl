@@ -9,7 +9,7 @@ function solve_discretised(dist::DiscreteNonParametric)
     # Create problem data
     prob = probs(dist)
     belief = support(dist)
-    n = length(belief) 
+    n = length(belief)
 
     # Initalise model
     BPPI = Model(Gurobi.Optimizer)
@@ -31,7 +31,7 @@ function solve_discretised(dist::DiscreteNonParametric)
 
     # Solve model
     optimize!(BPPI)
-    
+
     termstatus = termination_status(BPPI)
     termstatus == MOI.OPTIMAL || @warn("Termination status = $termstatus")
 
@@ -53,6 +53,6 @@ end
 
 function plot_exp_payoff(dist::DiscreteNonParametric)
     x = support(dist)
-    plot!(x, t -> expected_payoff(t, dist), label = L"V", legend = :outertopright)  
+    plot!(x, t -> expected_payoff(t, dist), label = L"V", legend = :outertopright)
 end
 
