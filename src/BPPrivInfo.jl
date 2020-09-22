@@ -63,7 +63,7 @@ integrated_payoff(cutoff::Real, density::Density=unidens) =
 """
 Sender expected payoff as a function of the cutoff and the type distribution
 """
-expected_payoff(cutoff::Real, dist::CUD=unidist, n::Integer=500) =
+expected_payoff(cutoff::T, dist::CUD=unidist; n::Integer=500) where {T <: Real} =
                                         E(dist, n)(t -> payoff(t, cutoff))
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
@@ -79,7 +79,7 @@ end
 """
 Alias for expected_payoff
 """
-V(cutoff::Real, dist::CUD=unidist, n::Integer=500) = expected_payoff(cutoff, dist, n)
+V(cutoff::Real, dist::CUD=unidist, n::Integer=500) = expected_payoff(cutoff, dist; n = n)
 V(cutoff, f::Function, ub::Real) = expected_payoff(cutoff, f, ub)
 V(cutoff, density::Density=unidens) = V(cutoff, density.f, density.ub)
 V(cutoff, dist::DiscreteNonParametric) = expected_payoff(cutoff, dist)
