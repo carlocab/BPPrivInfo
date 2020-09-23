@@ -33,7 +33,7 @@ const E(d::UD, n::Integer=500) = expectation(d; n=n)
 const Density = UnivariateDensity
 
 const likelihoodratio(p) = p / (1 - p)
-likelihood_ratio_multiplier(x, y) = (likelihoodratio(x) - 1) / (likelihoodratio(x) - likelihoodratio(y))
+likelihood_ratio_multiplier(x, y) = (likelihoodratio(y) - 1) / (likelihoodratio(y) - likelihoodratio(x))
 const LRM = likelihood_ratio_multiplier
 
 # Assume sender chooses a cutoff type in [0,1/2]
