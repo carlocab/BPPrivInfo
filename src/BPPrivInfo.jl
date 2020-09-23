@@ -91,7 +91,7 @@ V(cutoff::Real, dist::UD=unidist; n::Integer=500) = expected_payoff(cutoff, dist
 V(cutoff, f::Function, ub::Real) = expected_payoff(cutoff, f, ub)
 V(cutoff, density::Density=unidens) = V(cutoff, density.f, density.ub)
 
-V(pL, pH, dist::UD; n=Integer=500) = expected_payoff(cutoff, dist; n = n)
+V(pL, pH, dist::UD; n=Integer=500) = expected_payoff(pL, pH, dist; n = n)
 V(pL, pH, f::Function, ub::Real) = expected_payoff(pL, pH, f, ub)
 V(pL, pH, density::Density) = expected_payoff(pL, pH, density)
 
