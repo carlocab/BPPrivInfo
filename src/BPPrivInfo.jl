@@ -68,13 +68,13 @@ function payoff(type::T, pL::T, pH::T) where {T <: Real}
         return zero(pay)
     end
 end
-payoff(type::Real, pL::Real, pH::Real) = payoff(promote(type, pL, pH)...) 
+payoff(type::Real, pL::Real, pH::Real) = payoff(promote(type, pL, pH)...)
 
 # Sender Expected Payoffs
 payoff_integrand(t, c, f::Function=f) = payoff(t, c) * f(t)
 integrated_payoff(cutoff, density::Function=f, ub::Real=ub) =
         quadgk(t -> payoff_integrand(t, cutoff, density), cutoff, ub)
-integrated_payoff(cutoff::Real, density::Density=unidens) = 
+integrated_payoff(cutoff::Real, density::Density=unidens) =
         integrate(t -> payoff(t, cutoff), density, cutoff)
 
 """
