@@ -80,7 +80,7 @@ expected_payoff(pL::T, pH::T, dist::UD; n::Integer) where {T <: Real} = LRM(pL, 
 expected_payoff(pL::T, pH::T, f::Function, ub::Real) where {T <: Real} = LRM(pL, pH) * expected_payoff(pL, f, pH) + quadgk(f, pH, ub)[1]
 expected_payoff(pL::T, pH::T, density::Density) where {T<: Real} = expected_payoff(pL, pH, density.f, density.ub)
 
-expected_payoff(pL::Real, pH::Real, dist::UD; n::Integer=500) = expectedpayoff(promote(pL, pH)..., dist; n = n)
+expected_payoff(pL::Real, pH::Real, dist::UD; n::Integer) = expectedpayoff(promote(pL, pH)..., dist; n = n)
 expected_payoff(pL::Real, pH::Real, f::Function, ub::Real) = expectedpayoff(promote(pL, pH)..., f, ub)
 expected_payoff(pL::Real, pH::Real, density::Density) = expectedpayoff(promote(pL, pH)..., density)
 
