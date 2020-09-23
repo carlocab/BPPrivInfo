@@ -31,7 +31,9 @@ const CUD = ContinuousUnivariateDistribution
 const E(d::CUD, n::Integer=500) = expectation(d; n=n)
 const Density = UnivariateDensity
 
-likelihoodratio(p) = p / (1 - p)
+const likelihoodratio(p) = p / (1 - p)
+likelihood_ratio_multiplier(x, y) = (likelihoodratio(x) - 1) / (likelihoodratio(x) - likelihoodratio(y))
+const LRM = likelihood_ratio_multiplier
 
 # Assume sender chooses a cutoff type in [0,1/2]
 const lb = 0.0
