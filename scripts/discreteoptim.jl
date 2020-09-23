@@ -61,9 +61,9 @@ get_report_duals(report, i, n) = dual.(report[i,j] for j in 1:n if j ≠ i)
 function plot_report_duals(dist, report)
     belief = support(dist)
     n = length(belief)
-    plt = plot(belief[2:end], get_report_duals(report, 1, n), label = "1", legend = false)
+    plt = plot(belief[2:end], get_report_duals(report, 1, n), legend = false)
     for j in 2:n
-        plot!(plt, belief[1:end .≠ j], get_report_duals(report, j, n), label = "$j")
+        plot!(plt, belief[1:end .≠ j], get_report_duals(report, j, n))
     end
     display(plt)
 end
