@@ -165,7 +165,7 @@ function dVdpH(pL, pH, dist::CUD; n::Integer=500)
     return term1 + int_mul * term2
 end
 
-function dVdpH(pL, pH, f::Function, ub::Real)
+function dVdpH(pL, pH, f::Function)
     fpH = f(pH)
     int_mul = LR′(pH) * (1 - LR(pL)) / (LR(pH) - LR(pL))^2
     term1 = fpH * (-1 + LRM(pL, pH) * (pH + LR(pL) * (1 - pH)))
@@ -173,7 +173,7 @@ function dVdpH(pL, pH, f::Function, ub::Real)
     return term1 + int_mul * term2
 end
 
-dVdpH(pL, pH, dens::Density) = dVdpH(pL, pH, dens.f, dens.ub)
+dVdpH(pL, pH, dens::Density) = dVdpH(pL, pH, dens.f)
 
 function dVdpL(pL, pH, dist::CUD; n::Integer=500)
     lrmul = LRM(pL, pH)
@@ -185,7 +185,7 @@ function dVdpL(pL, pH, dist::CUD; n::Integer=500)
     return lrmul *(term1 + term2)
 end
 
-function dVdpL(pL, pH, f::Function, ub::Real)
+function dVdpL(pL, pH, f::Function) 
     lrmul = LRM(pL, pH)
     fpL = f(pL)
     integrand(x) = pL ≤ x ≤ pH ? 1 - x : zero(x)
@@ -195,21 +195,21 @@ function dVdpL(pL, pH, f::Function, ub::Real)
     return lrmul *(term1 + term2)
 end
 
-dVdpL(pL, pH, dens::Density) = dVdpL(pL, pH, dens.f, dens.ub)
+dVdpL(pL, pH, dens::Density) = dVdpL(pL, pH, dens.f)
 
 function ∇expected_payoff!(G, x, dist::CUD; n::Integer=500)
     G[1] = dVdpL(x[1], x[2], dist; n = n)
     G[2] = dVdpH(x[1], x[2], dist; n = n)
 end
 
-function ∇expected_payoff!(G, x, f::Function, ub::Real)
-    G[1] = dVdpL(x[1], x[2], f, ub)
-    G[2] = dVdpH(x[1], x[2], f, ub)
+function ∇expected_payoff!(G, x, f::Function)
+    G[1] = dVdpL(x[1], x[2], f)
+    G[2] = dVdpH(x[1], x[2], f)
 end
 
 # This next function is not necessary, but keeping it helps standardise the
 # structure of the code.
-∇expected_payoff!(G, x, dens::Density) = ∇expected_payoff!(G, x, dens.f, dens.ub)
+∇expected_payoff!(G, x, dens::Density) = ∇expected_payoff!(G, x, dens.f)
 
 function optimise(dist::UD=unidist; n::Integer=5000, initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=BFGS())
     ub = maximum(dist)
@@ -230,14 +230,14 @@ function optimise(f::Function, lb::Real, ub::Real; initx=[eps(0.0), 1 - eps(1.0)
         lower = [lb, 1/2]
         upper = [1/2, ub]
         initx = [max(initx[1], lb + eps(lb)), min(initx[2], ub - eps(ub))]
-        gradient!(G, x) = -∇expected_payoff!(G, x, f, lb, ub)
-        return optimize(x -> -expected_payoff(x[1], x[2], f, lb, ub), gradient!, lower, upper, initx, Fminbox(inner_optimizer))
+        gradient!(G, x) = -∇expected_payoff!(G, x, f)
+        return optimize(x -> -expected_payoff(x[1], x[2], f, ub), gradient!, lower, upper, initx, Fminbox(inner_optimizer))
     else
         objective(x) = -expected_payoff(x, f, ub)
         return optimize(x -> -expected_payoff(x, f, ub), lb, ub, alg)
     end
 end
 
-optimise(density::Density; initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=BFGS()) = optimise(density.f, density.lb, density.ub; alg=alg)
+optimise(density::Density; initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=BFGS()) = optimise(density.f, density.ub; alg=alg)
 
 end # module
