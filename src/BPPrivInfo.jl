@@ -7,11 +7,9 @@ export λ
 export upper_integral_λ
 export Λ
 export μ
-export dμdp
 export optimise
 export UnivariateDensity
 export discretise
-export dVdpL, dVdpH
 
 using LinearAlgebra
 using Optim
