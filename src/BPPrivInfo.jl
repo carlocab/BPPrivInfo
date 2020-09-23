@@ -140,7 +140,7 @@ function optimise(dist::UD=unidist; n::Integer=5000, alg=Brent())
 end
 
 function optimise(f::Function, lb::Real, ub::Real; alg=Brent())
-    objective(x) = -V(x, f, ub)
+    objective(x) = -expected_payoff(x, f, ub)
     return optimize(objective, lb, ub, alg)
 end
 
