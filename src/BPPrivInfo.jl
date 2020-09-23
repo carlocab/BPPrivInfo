@@ -57,6 +57,10 @@ function payoff(type::T, cutoff::T) where {T <: Real}
 end
 payoff(type::Real, cutoff::Real) = payoff(promote(type, cutoff)...)
 
+# Methods for two-cutoff case
+payoff(type::T, pL::T, pH::T) where {T <: Real} = type ≤ pH ? payoff(type, pL) : zero(payoff(type, pL))
+payoff(type::Real, pL::Real, pH::Real) = payoff(promote(type, pL, pH)...) 
+
 # Sender Expected Payoffs
 payoff_integrand(t, c, f::Function=f) = payoff(t, c) * f(t)
 integrated_payoff(cutoff, density::Function=f, ub::Real=ub) =
@@ -71,12 +75,25 @@ expected_payoff(cutoff::Real, dist::UD=unidist; n::Integer) = E(dist, n)(t -> pa
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
 
+# Methods for the two-cutoff case
+expected_payoff(pL::T, pH::T, dist::UD; n::Integer) where {T <: Real} = E(dist, n)(t -> payoff(t, pL, pH)) + 1 - cdf(dist, pH)
+expected_payoff(pL::T, pH::T, f::Function, ub::Real) where {T <: Real} = expected_payoff(pL, f, pH) + quadgk(f, pH, ub)[1]
+expected_payoff(pL::T, pH::T, density::Density) where {T<: Real} = expected_payoff(pL, pH, density.f, density.ub)
+
+expected_payoff(pL::Real, pH::Real, dist::UD; n::Integer=500) = expectedpayoff(promote(pL, pH)..., dist; n = n)
+expected_payoff(pL::Real, pH::Real, f::Function, ub::Real) = expectedpayoff(promote(pL, pH)..., f, ub)
+expected_payoff(pL::Real, pH::Real, density::Density) = expectedpayoff(promote(pL, pH)..., density)
+
 """
 Alias for expected_payoff
 """
 V(cutoff::Real, dist::UD=unidist; n::Integer=500) = expected_payoff(cutoff, dist; n = n)
 V(cutoff, f::Function, ub::Real) = expected_payoff(cutoff, f, ub)
 V(cutoff, density::Density=unidens) = V(cutoff, density.f, density.ub)
+
+V(pL, pH, dist::UD; n=Integer=500) = expected_payoff(cutoff, dist; n = n)
+V(pL, pH, f::Function, ub::Real) = expected_payoff(pL, pH, f, ub)
+V(pL, pH, density::Density) = expected_payoff(pL, pH, density)
 
 # Lagrange Multipliers
 series_integrand(p::T, t::T) where {T <: Real} = t ≥ p ? 1 - t : zero(t)
