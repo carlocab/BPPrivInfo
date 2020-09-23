@@ -76,8 +76,8 @@ expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, 
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
 
 # Methods for the two-cutoff case
-expected_payoff(pL::T, pH::T, dist::UD; n::Integer) where {T <: Real} = E(dist, n)(t -> payoff(t, pL, pH)) + 1 - cdf(dist, pH)
-expected_payoff(pL::T, pH::T, f::Function, ub::Real) where {T <: Real} = expected_payoff(pL, f, pH) + quadgk(f, pH, ub)[1]
+expected_payoff(pL::T, pH::T, dist::UD; n::Integer) where {T <: Real} = LRM(pL, pH) * E(dist, n)(t -> payoff(t, pL, pH)) + 1 - cdf(dist, pH)
+expected_payoff(pL::T, pH::T, f::Function, ub::Real) where {T <: Real} = LRM(pL, pH) * expected_payoff(pL, f, pH) + quadgk(f, pH, ub)[1]
 expected_payoff(pL::T, pH::T, density::Density) where {T<: Real} = expected_payoff(pL, pH, density.f, density.ub)
 
 expected_payoff(pL::Real, pH::Real, dist::UD; n::Integer=500) = expectedpayoff(promote(pL, pH)..., dist; n = n)
