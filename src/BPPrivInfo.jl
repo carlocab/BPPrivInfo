@@ -58,7 +58,14 @@ end
 payoff(type::Real, cutoff::Real) = payoff(promote(type, cutoff)...)
 
 # Methods for two-cutoff case
-payoff(type::T, pL::T, pH::T) where {T <: Real} = type ≤ pH ? payoff(type, pL) : zero(payoff(type, pL))
+function payoff(type::T, pL::T, pH::T) where {T <: Real}
+    pay = type + LR(pL) * (1 - type)
+    if pL ≤ type ≤ pH
+        return pay
+    else
+        return zero(pay)
+    end
+end
 payoff(type::Real, pL::Real, pH::Real) = payoff(promote(type, pL, pH)...) 
 
 # Sender Expected Payoffs
