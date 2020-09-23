@@ -182,12 +182,13 @@ function ∇expected_payoff!(G, x, dist::CUD; n::Integer=500)
     G[2] = dVdpH(x[1], x[2], dist; n = n)
 end
 
-function optimise(dist::UD=unidist; n::Integer=5000, initx=[0.25, 0.75], alg=Brent(), inner_optimizer=ConjugateGradient())
+function optimise(dist::UD=unidist; n::Integer=5000, initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=ConjugateGradient())
     ub = maximum(dist)
     lb = minimum(dist)
     if ub > 1/2 && cdf(dist,ub) - cdf(dist,1/2) > 0
         lower = [lb, 1/2]
         upper = [1/2, ub]
+        initx = [max(initx[1], lb + eps(lb)), min(initx[2], ub - eps(ub))]
         gradient!(G, x) = -∇expected_payoff!(G, x, dist; n = n)
         return optimize(x -> -expected_payoff(x[1], x[2], dist; n = n), gradient!, lower, upper, initx, Fminbox(inner_optimizer))
     else
