@@ -28,7 +28,8 @@ include("discrete.jl")
 
 const derivative = ForwardDiff.derivative
 const CUD = ContinuousUnivariateDistribution
-const E(d::CUD, n::Integer=500) = expectation(d; n=n)
+const UD = UnivariateDistribution
+const E(d::UD, n::Integer=500) = expectation(d; n=n)
 const Density = UnivariateDensity
 
 const likelihoodratio(p) = p / (1 - p)
@@ -66,33 +67,22 @@ integrated_payoff(cutoff::Real, density::Density=unidens) =
 """
 Sender expected payoff as a function of the cutoff and the type distribution
 """
-expected_payoff(cutoff::T, dist::CUD=unidist; n::Integer=500) where {T <: Real} =
-                                        E(dist, n)(t -> payoff(t, cutoff))
+expected_payoff(cutoff::Real, dist::UD=unidist; n::Integer) = E(dist, n)(t -> payoff(t, cutoff))
 expected_payoff(cutoff, f::Function=f, ub::Real=ub) = integrated_payoff(cutoff, f, ub)[1]
 expected_payoff(cutoff, density::Density) = expected_payoff(cutoff, density.f, density.ub)
-function expected_payoff(cut, dist::DiscreteNonParametric; kwargs...)
-    belief = support(dist)
-    prob = probs(dist)
-    cutindex = findfirst(≥(cut), belief)
-    # Use @view since I don't need to make a copy of `prob` and `belief`
-    prob = @view prob[cutindex:end]
-    belief = @view belief[cutindex:end]
-    return dot(prob, belief) + (cut / (1 - cut)) * dot(prob, (1 .- belief))
-end
 
 """
 Alias for expected_payoff
 """
-V(cutoff::Real, dist::CUD=unidist; n::Integer=500) = expected_payoff(cutoff, dist; n = n)
+V(cutoff::Real, dist::UD=unidist; n::Integer=500) = expected_payoff(cutoff, dist; n = n)
 V(cutoff, f::Function, ub::Real) = expected_payoff(cutoff, f, ub)
 V(cutoff, density::Density=unidens) = V(cutoff, density.f, density.ub)
-V(cutoff, dist::DiscreteNonParametric) = expected_payoff(cutoff, dist)
 
 # Lagrange Multipliers
 series_integrand(p::T, t::T) where {T <: Real} = t ≥ p ? 1 - t : zero(t)
 series_integrand(p::Real, t::Real) = series_integrand(promote(p, t)...)
-series_integral(p, dist::CUD, n::Integer=500) = E(dist, n)(t -> series_integrand(p, t))
-integral_term(p, dist::CUD, n::Integer=500) = series_integral(p, dist, n) / (1 - p)^2
+series_integral(p, dist::UD, n::Integer=500) = E(dist, n)(t -> series_integrand(p, t))
+integral_term(p, dist::UD, n::Integer=500) = series_integral(p, dist, n) / (1 - p)^2
 
 series_integrand(t, f::Function) = (1 - t) * f(t)
 series_integral(p, f::Function, ub::Real) = quadgk(t -> series_integrand(t, f), p, ub)
@@ -102,7 +92,7 @@ integral_term(p, f::Function, ub::Real) = series_integral(p, f, ub)[1] / (1 - p)
 """
 Lagrange multiplier for the IC (reporting) constraint
 """
-λ(p::Real, dist::CUD=unidist, n::Integer=500) = pdf(dist, p) - integral_term(p, dist, n)
+λ(p::Real, dist::UD=unidist, n::Integer=500) = pdf(dist, p) - integral_term(p, dist, n)
 λ(p, f::Function, ub::Real) = f(p) - integral_term(p, f, ub)
 λ(p, density::Density=unidens) = λ(p, density.f, density.ub)
 
@@ -142,7 +132,7 @@ dμdp(p, f::Function=f, ub::Real=ub) =
 
 dμdp(p, d::Density) = dμdp(p, d.f, d.ub)
 
-function optimise(dist::T=unidist; n::Integer=5000, alg=Brent()) where {T <: Union{CUD, DiscreteNonParametric}}
+function optimise(dist::UD=unidist; n::Integer=5000, alg=Brent())
     objective(x) = -expected_payoff(x, dist; n = n)
     lb = minimum(dist)
     ub = maximum(dist)
