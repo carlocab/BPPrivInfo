@@ -182,7 +182,7 @@ function ∇expected_payoff!(G, x, dist::CUD; n::Integer=500)
     G[2] = dVdpH(x[1], x[2], dist; n = n)
 end
 
-function optimise(dist::UD=unidist; n::Integer=5000, initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=ConjugateGradient())
+function optimise(dist::UD=unidist; n::Integer=10000, initx=[eps(0.0), 1 - eps(1.0)], alg=Brent(), inner_optimizer=BFGS())
     ub = maximum(dist)
     lb = minimum(dist)
     if ub > 1/2 && cdf(dist,ub) - cdf(dist,1/2) > 0
