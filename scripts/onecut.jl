@@ -8,7 +8,7 @@ using QuadGK
 
 const lb = 0.0
 const ub = 0.5
-const tridist = TriangularDist(lb, ub) 
+const tridist = TriangularDist(lb, ub)
 const sin_f(t) = lb ≤ t ≤ ub ? 2sin(4π * t) + 2 : zero(t)
 
 function plotfuncs(dist::Distribution=tridist, n::Integer=501)

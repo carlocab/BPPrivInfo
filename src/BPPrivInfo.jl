@@ -146,7 +146,7 @@ upper_integral_λ(p, density::Density=unidens) = upper_integral_λ(p, density.f,
 """
 ``\\partial \\mu / \\partial p``
 """
-dμdp(p::Real, dist::CUD=unidist, n::Integer=500) = 
+dμdp(p::Real, dist::CUD=unidist, n::Integer=500) =
                 (2 + 1 / (1 - p)) * pdf(dist, p) +
                 2p * derivative(t -> pdf(dist, t), p) +
                 2integral_term(p, dist, n) / (1 - p)
