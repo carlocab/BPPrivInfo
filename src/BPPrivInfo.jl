@@ -11,6 +11,7 @@ export dμdp
 export optimise
 export UnivariateDensity
 export discretise
+export dVdpL, dVdpH
 
 using LinearAlgebra
 using Optim
@@ -33,6 +34,7 @@ const E(d::UD, n::Integer=500) = expectation(d; n=n)
 const Density = UnivariateDensity
 
 const likelihoodratio(p) = p / (1 - p)
+const LR = likelihoodratio
 likelihood_ratio_multiplier(x, y) = (likelihoodratio(y) - 1) / (likelihoodratio(y) - likelihoodratio(x))
 const LRM = likelihood_ratio_multiplier
 
@@ -156,11 +158,41 @@ dμdp(p, f::Function=f, ub::Real=ub) =
 
 dμdp(p, d::Density) = dμdp(p, d.f, d.ub)
 
-function optimise(dist::UD=unidist; n::Integer=5000, alg=Brent())
-    objective(x) = -expected_payoff(x, dist; n = n)
-    lb = minimum(dist)
+LR′(x) = 1 / (1 - x)^2
+function dVdpH(pL, pH, dist::CUD; n::Integer=500)
+    fpH = pdf(dist, pH)
+    int_mul = LR′(pH) * (1 - LR(pL)) / (LR(pH) - LR(pL))^2
+    term1 = fpH * (-1 + LRM(pL, pH) * (pH + LR(pL) * (1 - pH)))
+    term2 = E(dist, n)(t -> payoff(t, pL, pH))
+    return term1 + int_mul * term2
+end
+
+function dVdpL(pL, pH, dist::CUD; n::Integer=500)
+    lrmul = LRM(pL, pH)
+    fpL = pdf(dist, pL)
+    integrand(x) = pL ≤ x ≤ pH ? 1 - x : zero(x)
+    integral1 = E(dist, n)(integrand)
+    term1 = -2pL * fpL + LR′(pL) * integral1
+    term2 = LR′(pL) * E(dist, n)(t -> payoff(t, pL, pH)) / (LR(pH) - LR(pL))
+    return lrmul *(term1 + term2)
+end
+
+function ∇expected_payoff!(G, x, dist::CUD; n::Integer=500)
+    G[1] = dVdpL(x[1], x[2], dist; n = n)
+    G[2] = dVdpH(x[1], x[2], dist; n = n)
+end
+
+function optimise(dist::UD=unidist; n::Integer=5000, initx=[0.25, 0.75], alg=Brent(), inner_optimizer=ConjugateGradient())
     ub = maximum(dist)
-    return optimize(objective, lb, ub, alg)
+    lb = minimum(dist)
+    if ub > 1/2 && cdf(dist,ub) - cdf(dist,1/2) > 0
+        lower = [lb, 1/2]
+        upper = [1/2, ub]
+        gradient!(G, x) = -∇expected_payoff!(G, x, dist; n = n)
+        return optimize(x -> -expected_payoff(x[1], x[2], dist; n = n), gradient!, lower, upper, initx, Fminbox(inner_optimizer))
+    else
+        return optimize(x -> -expected_payoff(x, dist; n = n), lb, ub, alg)
+    end
 end
 
 function optimise(f::Function, lb::Real, ub::Real; alg=Brent())
