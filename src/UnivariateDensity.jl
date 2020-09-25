@@ -10,8 +10,7 @@ struct UnivariateDensity{F<:Function, T<:Real}
             g(t) = lb ≤ t ≤ ub ? f(t) : zero(t)
             return new{typeof(g), T}(g, lb, ub)
         else
-            @error "Not a valid density!"
-            # Maybe better to throw an argument exception?
+            throw(ArgumentError("Not a valid density."))
         end
     end
 end
